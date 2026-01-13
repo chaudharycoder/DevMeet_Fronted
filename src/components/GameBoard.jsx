@@ -31,11 +31,9 @@ const GameBoard = ({ socket, username, roomId, onLeave }) => {
     const [activeTab, setActiveTab] = useState('chat'); // 'chat' or 'people'
 
     // --- GAME/ROOM STATE ---
-    const [role, setRole] = useState('viewer');
     const [messages, setMessages] = useState([]);
     const [inputMessage, setInputMessage] = useState('');
     const [users, setUsers] = useState({});
-    const [drawerName, setDrawerName] = useState('');
 
     // --- REFS ---
     const peers = useRef({}); // { socketId: RTCPeerConnection }
@@ -54,13 +52,16 @@ const GameBoard = ({ socket, username, roomId, onLeave }) => {
     // --- INITIALIZATION & SIGNALING ---
     useEffect(() => {
         const initMedia = async () => {
+            console.log("Initialising media for room:", roomId);
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                console.log("Media stream successfully captured:", stream.id);
                 setLocalStream(stream);
                 localStreamRef.current = stream;
+                console.log("Emitting join-room for:", username);
                 socket.emit('join-room', { roomId, username });
             } catch (err) {
-                console.error("Error accessing media devices:", err);
+                console.error("CRITICAL: Failed to access camera/mic:", err);
                 socket.emit('join-room', { roomId, username });
             }
         };
@@ -112,9 +113,7 @@ const GameBoard = ({ socket, username, roomId, onLeave }) => {
         socket.on('peer-left', handlePeerLeft);
 
         // State Listeners
-        socket.on('role', (newRole) => setRole(newRole));
         socket.on('users-list', (data) => setUsers(data.users));
-        socket.on('drawer-update', (name) => setDrawerName(name));
         socket.on('chat', (msg) => setMessages(prev => [...prev, msg]));
 
         return () => {
@@ -124,9 +123,7 @@ const GameBoard = ({ socket, username, roomId, onLeave }) => {
             socket.off('ice-candidate');
             socket.off('peer-left');
             socket.off('chat');
-            socket.off('role');
             socket.off('users-list');
-            socket.off('drawer-update');
 
             if (localStreamRef.current) localStreamRef.current.getTracks().forEach(t => t.stop());
             Object.values(peers.current).forEach(pc => pc.close());
@@ -196,10 +193,11 @@ const GameBoard = ({ socket, username, roomId, onLeave }) => {
             <div className={`relative z-[110] bg-bg-card/80 backdrop-blur-md border-b border-white/5 px-6 py-4 flex items-center justify-between transition-all duration-500 ease-in-out ${(showWhiteboard || showCodeEditor) ? '-translate-y-full opacity-0 h-0 p-0 overflow-hidden' : 'translate-y-0'
                 }`}>
                 <div className="flex items-center gap-4">
-                    <h2 className="text-xl font-bold text-white px-2">Meeting: {roomId}</h2>
+                    <h2 className="text-xl font-bold text-white px-2 tracking-tight">Meeting Room: {roomId}</h2>
                     <div className="h-4 w-px bg-white/10"></div>
-                    <span className="text-sm text-text-muted">
-                        {drawerName ? `${drawerName} is presenting` : 'Discussion Phase'}
+                    <span className="text-xs text-text-muted font-medium uppercase tracking-widest flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-success animate-pulse"></span>
+                        Active Session
                     </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -216,7 +214,7 @@ const GameBoard = ({ socket, username, roomId, onLeave }) => {
             <div className="flex-1 flex relative overflow-hidden">
                 <div className="flex-1 flex flex-col relative">
                     {showWhiteboard ? (
-                        <Whiteboard socket={socket} role={role} roomId={roomId} />
+                        <Whiteboard socket={socket} roomId={roomId} />
                     ) : (
                         <ParticipantGrid
                             localStream={localStream}

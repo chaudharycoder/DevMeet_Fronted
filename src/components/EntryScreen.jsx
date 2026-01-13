@@ -1,9 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Keyboard, ArrowRight, User, Shield, Zap, Plus } from 'lucide-react';
 
 const EntryScreen = ({ onJoin }) => {
     const [name, setName] = useState('');
     const [roomId, setRoomId] = useState('');
+    const [previewStream, setPreviewStream] = useState(null);
+    const videoRef = useRef(null);
+
+    // Initialise camera preview
+    useEffect(() => {
+        let stream = null;
+        const getPreview = async () => {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                setPreviewStream(stream);
+                if (videoRef.current) videoRef.current.srcObject = stream;
+            } catch (err) {
+                console.error("Video preview failed:", err);
+            }
+        };
+        getPreview();
+        return () => {
+            if (stream) stream.getTracks().forEach(track => track.stop());
+        };
+    }, []);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -37,6 +57,9 @@ const EntryScreen = ({ onJoin }) => {
                         A high-performance collaborative environment for modern teams. Secure video, whiteboarding, and code editing.
                     </p>
                 </div>
+
+                {/* Video Preview Section */}
+
 
                 {/* Join Card */}
                 <div className="w-full max-w-md bg-white p-1 rounded-[32px] shadow-2xl">

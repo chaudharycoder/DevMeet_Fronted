@@ -8,7 +8,7 @@ import { Pencil, Square, ArrowRight, Trash2 } from 'lucide-react';
  * - mainCanvas: Stores the permanent drawing.
  * - previewCanvas: Shows the "ghost" shape precisely while dragging.
  */
-const Whiteboard = memo(({ socket, role, roomId }) => {
+const Whiteboard = memo(({ socket, roomId }) => {
     const [drawingTool, setDrawingTool] = useState('pencil'); // 'pencil', 'rect', 'arrow'
     const mainCanvasRef = useRef(null);
     const previewCanvasRef = useRef(null);
@@ -158,7 +158,6 @@ const Whiteboard = memo(({ socket, role, roomId }) => {
 
     // --- MOUSE HANDLERS ---
     const handleMouseDown = (e) => {
-        if (role !== 'drawer') return;
         isDrawing.current = true;
         const pos = previewCanvasRef.current.getCanvasPos(e);
         startPos.current = pos;
@@ -167,7 +166,7 @@ const Whiteboard = memo(({ socket, role, roomId }) => {
     };
 
     const handleMouseMove = (e) => {
-        if (!isDrawing.current || role !== 'drawer') return;
+        if (!isDrawing.current) return;
         const pos = previewCanvasRef.current.getCanvasPos(e);
         const lastX = mainCanvasRef.current.lastX;
         const lastY = mainCanvasRef.current.lastY;
@@ -200,7 +199,7 @@ const Whiteboard = memo(({ socket, role, roomId }) => {
     };
 
     const handleMouseUp = (e) => {
-        if (!isDrawing.current || role !== 'drawer') return;
+        if (!isDrawing.current) return;
         isDrawing.current = false;
 
         if (drawingTool === 'pencil') {
@@ -242,49 +241,45 @@ const Whiteboard = memo(({ socket, role, roomId }) => {
                     ref={previewCanvasRef}
                     width={1200}
                     height={800}
-                    className={`absolute inset-0 w-full h-full z-10 ${role === 'drawer' ? 'cursor-crosshair' : 'cursor-default'}`}
+                    className="absolute inset-0 w-full h-full z-10 cursor-crosshair"
                     onMouseDown={handleMouseDown}
                     onMouseMove={handleMouseMove}
                     onMouseUp={handleMouseUp}
                     onMouseLeave={handleMouseUp}
                 />
 
-                {/* Tool Selector (Drawer only) */}
-                {role === 'drawer' && (
-                    <div className="absolute top-4 left-4 flex flex-col gap-2 z-20">
-                        <button
-                            onClick={() => setDrawingTool('pencil')}
-                            className={`p-3 rounded-2xl shadow-xl transition-all ${drawingTool === 'pencil' ? 'bg-primary text-white' : 'bg-bg-light text-text-dark hover:bg-gray-200'}`}
-                            title="Pencil"
-                        >
-                            <Pencil size={20} />
-                        </button>
-                        <button
-                            onClick={() => setDrawingTool('rect')}
-                            className={`p-3 rounded-2xl shadow-xl transition-all ${drawingTool === 'rect' ? 'bg-primary text-white' : 'bg-bg-light text-text-dark hover:bg-gray-200'}`}
-                            title="Rectangle"
-                        >
-                            <Square size={20} />
-                        </button>
-                        <button
-                            onClick={() => setDrawingTool('arrow')}
-                            className={`p-3 rounded-2xl shadow-xl transition-all ${drawingTool === 'arrow' ? 'bg-primary text-white' : 'bg-bg-light text-text-dark hover:bg-gray-200'}`}
-                            title="Arrow"
-                        >
-                            <ArrowRight size={20} />
-                        </button>
-                    </div>
-                )}
-
-                {/* Clear Button (Drawer only) */}
-                {role === 'drawer' && (
+                {/* Tool Selector */}
+                <div className="absolute top-4 left-4 flex flex-col gap-2 z-20">
                     <button
-                        onClick={() => socket.emit('clear')}
-                        className="absolute top-4 right-4 p-3 bg-danger text-white rounded-2xl shadow-xl hover:opacity-90 transition-all font-bold flex items-center gap-2 z-20"
+                        onClick={() => setDrawingTool('pencil')}
+                        className={`p-3 rounded-2xl shadow-xl transition-all ${drawingTool === 'pencil' ? 'bg-primary text-white' : 'bg-bg-light text-text-dark hover:bg-gray-200'}`}
+                        title="Pencil"
                     >
-                        <Trash2 size={20} /> Clear
+                        <Pencil size={20} />
                     </button>
-                )}
+                    <button
+                        onClick={() => setDrawingTool('rect')}
+                        className={`p-3 rounded-2xl shadow-xl transition-all ${drawingTool === 'rect' ? 'bg-primary text-white' : 'bg-bg-light text-text-dark hover:bg-gray-200'}`}
+                        title="Rectangle"
+                    >
+                        <Square size={20} />
+                    </button>
+                    <button
+                        onClick={() => setDrawingTool('arrow')}
+                        className={`p-3 rounded-2xl shadow-xl transition-all ${drawingTool === 'arrow' ? 'bg-primary text-white' : 'bg-bg-light text-text-dark hover:bg-gray-200'}`}
+                        title="Arrow"
+                    >
+                        <ArrowRight size={20} />
+                    </button>
+                </div>
+
+                {/* Clear Button */}
+                <button
+                    onClick={() => socket.emit('clear')}
+                    className="absolute top-4 right-4 p-3 bg-danger text-white rounded-2xl shadow-xl hover:opacity-90 transition-all font-bold flex items-center gap-2 z-20"
+                >
+                    <Trash2 size={20} /> Clear
+                </button>
             </div>
         </div>
     );
