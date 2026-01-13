@@ -9,20 +9,20 @@ const EntryScreen = ({ onJoin }) => {
 
     // Initialise camera preview
     useEffect(() => {
-        let stream = null;
-        const getPreview = async () => {
-            try {
-                stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-                setPreviewStream(stream);
-                if (videoRef.current) videoRef.current.srcObject = stream;
-            } catch (err) {
-                console.error("Video preview failed:", err);
-            }
-        };
-        getPreview();
-        return () => {
-            if (stream) stream.getTracks().forEach(track => track.stop());
-        };
+        // let stream = null;
+        // const getPreview = async () => {
+        //     try {
+        //         stream = await navigator.mediaDevices.getUserMedia({ video: false, audio: false });
+        //         setPreviewStream(stream);
+        //         if (videoRef.current) videoRef.current.srcObject = stream;
+        //     } catch (err) {
+        //         console.error("Video preview failed:", err);
+        //     }
+        // };
+        // getPreview();
+        // return () => {
+        //     if (stream) stream.getTracks().forEach(track => track.stop());
+        // };
     }, []);
 
     const handleSubmit = (e) => {
@@ -124,23 +124,7 @@ const EntryScreen = ({ onJoin }) => {
                     </div>
                 </div>
 
-                {/* Footer Badges */}
-                <div className="flex items-center gap-10 pt-4">
-                    <div className="flex items-center gap-3">
-                        <Zap size={20} className="text-white" />
-                        <div className="flex flex-col text-left">
-                            <span className="text-base font-black leading-none text-white">FAST</span>
-                            <span className="text-[8px] text-text-muted font-black uppercase tracking-widest leading-loose">Low Latency</span>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <Shield size={20} className="text-white" />
-                        <div className="flex flex-col text-left">
-                            <span className="text-base font-black leading-none text-white">SECURE</span>
-                            <span className="text-[8px] text-text-muted font-black uppercase tracking-widest leading-loose">End-to-End</span>
-                        </div>
-                    </div>
-                </div>
+
             </div>
         </div>
     );
