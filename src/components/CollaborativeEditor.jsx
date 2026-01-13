@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Editor from '@monaco-editor/react';
 import * as Y from 'yjs';
-import { WebrtcProvider } from 'y-webrtc';
+import { WebsocketProvider } from 'y-websocket';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import { MonacoBinding } from 'y-monaco';
 import { X, Settings, Code, Copy, Check } from 'lucide-react';
@@ -36,13 +36,20 @@ const CollaborativeEditor = ({ roomId, username, onClose }) => {
         // Initialize Yjs Document (the shared data model)
         const ydoc = new Y.Doc();
 
-        // Setup WebRTC Provider for P2P networking
-        const webrtcProvider = new WebrtcProvider(`monaco-room-${roomId}`, ydoc);
+        // Dynamically determine WebSocket URL from BACKEND_URL
+        const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+        const wsProtocol = BACKEND_URL.startsWith('https') ? 'wss' : 'ws';
+        // Remove protocol if exists and append /yjs
+        const host = BACKEND_URL.replace(/^https?:\/\//, '');
+        const wsUrl = `${wsProtocol}://${host}/yjs`;
+
+        // Setup Websocket Provider for client-server sync
+        const wsProvider = new WebsocketProvider(wsUrl, roomId, ydoc);
 
         // Setup IndexedDB Persistence so code survives page refreshes
         const persistence = new IndexeddbPersistence(`monaco-room-${roomId}`, ydoc);
 
-        setProvider(webrtcProvider);
+        setProvider(wsProvider);
 
         // Define a shared text type for the editor
         const type = ydoc.getText('monaco');
@@ -54,14 +61,14 @@ const CollaborativeEditor = ({ roomId, username, onClose }) => {
                 type,
                 editorRef.getModel(),
                 new Set([editorRef]),
-                webrtcProvider.awareness
+                wsProvider.awareness
             );
         }
 
         // Cleanup on unmount
         return () => {
             if (binding) binding.destroy();
-            webrtcProvider.destroy();
+            wsProvider.destroy();
             persistence.destroy();
             ydoc.destroy();
         };
