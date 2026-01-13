@@ -3,7 +3,7 @@ import io from 'socket.io-client';
 import EntryScreen from './components/EntryScreen.jsx';
 import GameBoard from './components/GameBoard.jsx'; // We'll keep the name for now but refactor its content
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;//chnage
 const socket = io(BACKEND_URL, {
     transports: ['websocket'],
 });
